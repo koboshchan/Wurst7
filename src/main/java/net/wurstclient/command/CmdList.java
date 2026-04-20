@@ -119,17 +119,30 @@ public final class CmdList
 	 */
 	public void registerCommandAddon(CommandAddon addon)
 	{
-		commandAddons.add(addon);
+		Collection<Command> addonCommands = addon.getCommands();
+		ArrayList<String> registeredCmdNames = new ArrayList<>();
 		
-		for(Command cmd : addon.getCommands())
+		try
 		{
-			if(cmds.containsKey(cmd.getName()))
-				System.err.println("[Wurst] Addon '" + addon.getAddonName()
-					+ "' provides a command with a duplicate name: "
-					+ cmd.getName());
+			for(Command cmd : addonCommands)
+			{
+				if(cmds.containsKey(cmd.getName()))
+					System.err.println("[Wurst] Addon '" + addon.getAddonName()
+						+ "' provides a command with a duplicate name: "
+						+ cmd.getName());
+				
+				cmds.put(cmd.getName(), cmd);
+				registeredCmdNames.add(cmd.getName());
+			}
+		}catch(RuntimeException e)
+		{
+			for(String cmdName : registeredCmdNames)
+				cmds.remove(cmdName);
 			
-			cmds.put(cmd.getName(), cmd);
+			throw e;
 		}
+		
+		commandAddons.add(addon);
 	}
 	
 	/**
