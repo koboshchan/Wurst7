@@ -9,6 +9,7 @@ package net.wurstclient.command;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -118,30 +119,17 @@ public final class CmdList
 	 */
 	public void registerCommandAddon(CommandAddon addon)
 	{
-		Command[] addonCommands = addon.getCommands();
-		ArrayList<String> registeredCmdNames = new ArrayList<>();
-		
-		try
-		{
-			for(Command cmd : addonCommands)
-			{
-				if(cmds.containsKey(cmd.getName()))
-					System.err.println("[Wurst] Addon '" + addon.getAddonName()
-						+ "' provides a command with a duplicate name: "
-						+ cmd.getName());
-				
-				cmds.put(cmd.getName(), cmd);
-				registeredCmdNames.add(cmd.getName());
-			}
-		}catch(RuntimeException e)
-		{
-			for(String cmdName : registeredCmdNames)
-				cmds.remove(cmdName);
-			
-			throw e;
-		}
-		
 		commandAddons.add(addon);
+		
+		for(Command cmd : addon.getCommands())
+		{
+			if(cmds.containsKey(cmd.getName()))
+				System.err.println("[Wurst] Addon '" + addon.getAddonName()
+					+ "' provides a command with a duplicate name: "
+					+ cmd.getName());
+			
+			cmds.put(cmd.getName(), cmd);
+		}
 	}
 	
 	/**
