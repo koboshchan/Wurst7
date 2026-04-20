@@ -96,8 +96,9 @@ public final class AddonLoader
 			WurstClient wurst = WurstClient.INSTANCE;
 			wurst.getHax().registerHackAddon(addon);
 			
-			System.out.println("[Wurst] Loaded hack addon: " + addon.getAddonName()
-				+ " (" + addon.getHacks().length + " hacks)");
+			System.out
+				.println("[Wurst] Loaded hack addon: " + addon.getAddonName()
+					+ " (" + addon.getHacks().length + " hacks)");
 			
 		}catch(Exception e)
 		{
@@ -114,9 +115,9 @@ public final class AddonLoader
 			WurstClient wurst = WurstClient.INSTANCE;
 			wurst.getCmds().registerCommandAddon(addon);
 			
-			System.out.println("[Wurst] Loaded command addon: "
-				+ addon.getAddonName() + " (" + addon.getCommands().length
-				+ " commands)");
+			System.out
+				.println("[Wurst] Loaded command addon: " + addon.getAddonName()
+					+ " (" + addon.getCommands().length + " commands)");
 			
 		}catch(Exception e)
 		{
