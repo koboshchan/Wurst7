@@ -123,10 +123,10 @@ public final class CmdList
 		for(Command cmd : addon.getCommands())
 		{
 			if(cmds.containsKey(cmd.getName()))
-				throw new IllegalArgumentException("[Wurst] Addon '"
-					+ addon.getAddonName()
-					+ "' tried to register duplicate command '"
-					+ cmd.getName() + "'.");
+				throw new IllegalArgumentException(
+					"[Wurst] Addon '" + addon.getAddonName()
+						+ "' tried to register duplicate command '"
+						+ cmd.getName() + "'.");
 			
 			cmds.put(cmd.getName(), cmd);
 		}

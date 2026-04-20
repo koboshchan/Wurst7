@@ -265,9 +265,10 @@ public final class HackList implements UpdateListener
 		for(Hack hack : addon.getHacks())
 		{
 			if(hax.containsKey(hack.getName()))
-				throw new IllegalArgumentException("[Wurst] Addon '"
-					+ addon.getAddonName() + "' tried to register duplicate hack '"
-					+ hack.getName() + "'.");
+				throw new IllegalArgumentException(
+					"[Wurst] Addon '" + addon.getAddonName()
+						+ "' tried to register duplicate hack '"
+						+ hack.getName() + "'.");
 			
 			hax.put(hack.getName(), hack);
 		}
