@@ -7,6 +7,7 @@
  */
 package net.wurstclient.addon;
 
+import java.util.Objects;
 import java.util.ServiceLoader;
 
 import net.wurstclient.WurstClient;
@@ -34,21 +35,30 @@ public final class AddonLoader
 	
 	private static void loadAddon(Addon addon)
 	{
+		String addonName = "<unknown>";
+		
 		try
 		{
+			addonName = Objects.requireNonNull(addon.getAddonName(),
+				"addon name");
+			Object[] hacks =
+				Objects.requireNonNull(addon.getHacks(), "addon hacks");
+			Object[] commands = Objects.requireNonNull(addon.getCommands(),
+				"addon commands");
+			
 			WurstClient wurst = WurstClient.INSTANCE;
 			
 			wurst.getHax().registerHackAddon(addon);
 			wurst.getCmds().registerCommandAddon(addon);
 			
-			System.out.println("[Wurst] Loaded addon: " + addon.getAddonName()
-				+ " (" + addon.getHacks().length + " hacks, "
-				+ addon.getCommands().length + " commands)");
+			System.out.println("[Wurst] Loaded addon: " + addonName + " ("
+				+ hacks.length + " hacks, " + commands.length
+				+ " commands)");
 			
 		}catch(Exception e)
 		{
-			System.err.println("[Wurst] Failed to load addon "
-				+ addon.getAddonName() + ": " + e);
+			System.err.println(
+				"[Wurst] Failed to load addon " + addonName + ": " + e);
 			e.printStackTrace();
 		}
 	}
