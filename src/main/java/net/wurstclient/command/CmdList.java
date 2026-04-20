@@ -9,7 +9,6 @@ package net.wurstclient.command;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -119,7 +118,7 @@ public final class CmdList
 	 */
 	public void registerCommandAddon(CommandAddon addon)
 	{
-		Collection<Command> addonCommands = addon.getCommands();
+		Command[] addonCommands = addon.getCommands();
 		ArrayList<String> registeredCmdNames = new ArrayList<>();
 		
 		try
