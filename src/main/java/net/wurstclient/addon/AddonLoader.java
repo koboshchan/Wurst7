@@ -10,6 +10,8 @@ package net.wurstclient.addon;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.ServiceConfigurationError;
 
 import net.wurstclient.WurstClient;
 
@@ -29,9 +31,13 @@ public final class AddonLoader
 		Set<Class<?>> loadedAddonClasses = new HashSet<>();
 		Set<Class<?>> loadedHackAddonClasses = new HashSet<>();
 		Set<Class<?>> loadedCommandAddonClasses = new HashSet<>();
+		ClassLoader classLoader = AddonLoader.class.getClassLoader();
 		
-		ServiceLoader<Addon> addonLoader = ServiceLoader.load(Addon.class);
-		for(Addon addon : addonLoader)
+		ServiceLoader<Addon> addonLoader =
+			ServiceLoader.load(Addon.class, classLoader);
+		Iterator<Addon> addonIterator = addonLoader.iterator();
+		for(Addon addon = getNextService(addonIterator); addon != null;
+			addon = getNextService(addonIterator))
 		{
 			loadAddon(addon);
 			loadedAddonClasses.add(addon.getClass());
@@ -40,8 +46,11 @@ public final class AddonLoader
 		}
 		
 		ServiceLoader<HackAddon> hackAddonLoader =
-			ServiceLoader.load(HackAddon.class);
-		for(HackAddon hackAddon : hackAddonLoader)
+			ServiceLoader.load(HackAddon.class, classLoader);
+		Iterator<HackAddon> hackAddonIterator = hackAddonLoader.iterator();
+		for(HackAddon hackAddon = getNextService(hackAddonIterator);
+			hackAddon != null;
+			hackAddon = getNextService(hackAddonIterator))
 		{
 			if(loadedHackAddonClasses.contains(hackAddon.getClass()))
 				continue;
@@ -51,8 +60,12 @@ public final class AddonLoader
 		}
 		
 		ServiceLoader<CommandAddon> commandAddonLoader =
-			ServiceLoader.load(CommandAddon.class);
-		for(CommandAddon commandAddon : commandAddonLoader)
+			ServiceLoader.load(CommandAddon.class, classLoader);
+		Iterator<CommandAddon> commandAddonIterator =
+			commandAddonLoader.iterator();
+		for(CommandAddon commandAddon = getNextService(commandAddonIterator);
+			commandAddon != null;
+			commandAddon = getNextService(commandAddonIterator))
 		{
 			if(loadedCommandAddonClasses.contains(commandAddon.getClass()))
 				continue;
@@ -66,6 +79,24 @@ public final class AddonLoader
 		{
 			System.out.println("[Wurst] No addons found via ServiceLoader.");
 		}
+	}
+	
+	private static <T> T getNextService(Iterator<T> iterator)
+	{
+		while(true)
+			try
+			{
+				if(!iterator.hasNext())
+					return null;
+				
+				return iterator.next();
+				
+			}catch(ServiceConfigurationError e)
+			{
+				System.err.println(
+					"[Wurst] Failed to discover addon service: " + e);
+				e.printStackTrace();
+			}
 	}
 	
 	private static void loadAddon(Addon addon)
