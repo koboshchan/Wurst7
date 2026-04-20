@@ -8,6 +8,8 @@
 package net.wurstclient.addon;
 
 import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.HashSet;
 
 import net.wurstclient.WurstClient;
 
@@ -24,11 +26,45 @@ public final class AddonLoader
 	 */
 	public static void loadAddons()
 	{
-		ServiceLoader<Addon> loader = ServiceLoader.load(Addon.class);
+		Set<Class<?>> loadedAddonClasses = new HashSet<>();
+		Set<Class<?>> loadedHackAddonClasses = new HashSet<>();
+		Set<Class<?>> loadedCommandAddonClasses = new HashSet<>();
 		
-		for(Addon addon : loader)
+		ServiceLoader<Addon> addonLoader = ServiceLoader.load(Addon.class);
+		for(Addon addon : addonLoader)
 		{
 			loadAddon(addon);
+			loadedAddonClasses.add(addon.getClass());
+			loadedHackAddonClasses.add(addon.getClass());
+			loadedCommandAddonClasses.add(addon.getClass());
+		}
+		
+		ServiceLoader<HackAddon> hackAddonLoader =
+			ServiceLoader.load(HackAddon.class);
+		for(HackAddon hackAddon : hackAddonLoader)
+		{
+			if(loadedHackAddonClasses.contains(hackAddon.getClass()))
+				continue;
+			
+			loadHackAddon(hackAddon);
+			loadedHackAddonClasses.add(hackAddon.getClass());
+		}
+		
+		ServiceLoader<CommandAddon> commandAddonLoader =
+			ServiceLoader.load(CommandAddon.class);
+		for(CommandAddon commandAddon : commandAddonLoader)
+		{
+			if(loadedCommandAddonClasses.contains(commandAddon.getClass()))
+				continue;
+			
+			loadCommandAddon(commandAddon);
+			loadedCommandAddonClasses.add(commandAddon.getClass());
+		}
+		
+		if(loadedAddonClasses.isEmpty() && loadedHackAddonClasses.isEmpty()
+			&& loadedCommandAddonClasses.isEmpty())
+		{
+			System.out.println("[Wurst] No addons found via ServiceLoader.");
 		}
 	}
 	
@@ -48,6 +84,43 @@ public final class AddonLoader
 		}catch(Exception e)
 		{
 			System.err.println("[Wurst] Failed to load addon "
+				+ addon.getAddonName() + ": " + e);
+			e.printStackTrace();
+		}
+	}
+	
+	private static void loadHackAddon(HackAddon addon)
+	{
+		try
+		{
+			WurstClient wurst = WurstClient.INSTANCE;
+			wurst.getHax().registerHackAddon(addon);
+			
+			System.out.println("[Wurst] Loaded hack addon: " + addon.getAddonName()
+				+ " (" + addon.getHacks().length + " hacks)");
+			
+		}catch(Exception e)
+		{
+			System.err.println("[Wurst] Failed to load hack addon "
+				+ addon.getAddonName() + ": " + e);
+			e.printStackTrace();
+		}
+	}
+	
+	private static void loadCommandAddon(CommandAddon addon)
+	{
+		try
+		{
+			WurstClient wurst = WurstClient.INSTANCE;
+			wurst.getCmds().registerCommandAddon(addon);
+			
+			System.out.println("[Wurst] Loaded command addon: "
+				+ addon.getAddonName() + " (" + addon.getCommands().length
+				+ " commands)");
+			
+		}catch(Exception e)
+		{
+			System.err.println("[Wurst] Failed to load command addon "
 				+ addon.getAddonName() + ": " + e);
 			e.printStackTrace();
 		}
