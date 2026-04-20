@@ -287,17 +287,38 @@ public final class HackList implements UpdateListener
 	 */
 	public void registerHackAddon(HackAddon addon)
 	{
-		hackAddons.add(addon);
+		ArrayList<Hack> hacks = new ArrayList<>();
+		ArrayList<String> hackNames = new ArrayList<>();
 		
 		for(Hack hack : addon.getHacks())
 		{
-			if(hax.containsKey(hack.getName()))
+			if(hack == null)
+				throw new NullPointerException("Addon '" + addon.getAddonName()
+					+ "' provides a null hack.");
+			
+			String hackName = hack.getName();
+			if(hackName == null)
+				throw new NullPointerException("Addon '" + addon.getAddonName()
+					+ "' provides a hack with a null name.");
+			
+			hacks.add(hack);
+			hackNames.add(hackName);
+		}
+		
+		for(int i = 0; i < hacks.size(); i++)
+		{
+			Hack hack = hacks.get(i);
+			String hackName = hackNames.get(i);
+			
+			if(hax.containsKey(hackName))
 				System.err.println("[Wurst] Addon '" + addon.getAddonName()
 					+ "' provides a hack with a duplicate name: "
-					+ hack.getName());
+					+ hackName);
 			
-			hax.put(hack.getName(), hack);
+			hax.put(hackName, hack);
 		}
+		
+		hackAddons.add(addon);
 	}
 	
 	/**
