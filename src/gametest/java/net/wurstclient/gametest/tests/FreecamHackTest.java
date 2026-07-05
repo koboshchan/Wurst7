@@ -11,9 +11,10 @@ import org.lwjgl.glfw.GLFW;
 
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.chicken.Chicken;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeverBlock;
@@ -111,8 +112,14 @@ public final class FreecamHackTest extends SingleplayerTest
 		runWurstCommand("setcheckbox Freecam tracer off");
 		runWurstCommand("setcheckbox Freecam hide_hand off");
 		context.waitTick();
-		assertScreenshotEquals("freecam_with_hand",
-			"https://i.imgur.com/6tahHsE.png");
+		// This is broken in Sodium 0.9.0, see
+		// https://github.com/CaffeineMC/sodium/issues/3745
+		// Remove this special case once that issue is fixed.
+		if(!WurstTest.IS_SODIUM_INSTALLED
+			|| !FabricLoader.getInstance().getModContainer("sodium").get()
+				.getMetadata().getVersion().toString().equals("0.9.0+mc26.2"))
+			assertScreenshotEquals("freecam_with_hand",
+				"https://i.imgur.com/6tahHsE.png");
 		runWurstCommand("setcheckbox Freecam hide_hand on");
 		
 		// Enable player movement, walk forward, and turn around
@@ -144,7 +151,7 @@ public final class FreecamHackTest extends SingleplayerTest
 		runCommand("setblock 0 -56 1 lever[face=wall,facing=north]");
 		runCommand("setblock 0 -56 3 lever[face=wall,facing=south]");
 		waitForBlock(0, 1, 3, Blocks.LEVER);
-		context.waitTicks(WurstTest.IS_MOD_COMPAT_TEST ? 5 : 1);
+		context.waitTicks(WurstTest.IS_SODIUM_INSTALLED ? 5 : 1);
 		world.waitForChunksRender();
 		context.takeScreenshot("freecam_interact_setup");
 		
@@ -164,18 +171,18 @@ public final class FreecamHackTest extends SingleplayerTest
 		world.waitForChunksRender();
 		context.takeScreenshot("freecam_interact_side_view");
 		
+		// Right click with "Interact from: Camera"
+		input.pressMouse(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
+		context.waitTick();
+		assertLeverState(0, -56, 1, false, "near lever, camera mode");
+		assertLeverState(0, -56, 3, true, "far lever, camera mode");
+		
 		// Right click with "Interact from: Player"
+		runWurstCommand("setmode Freecam interact_from player");
 		input.pressMouse(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
 		context.waitTick();
 		assertLeverState(0, -56, 1, true, "near lever, player mode");
-		assertLeverState(0, -56, 3, false, "far lever, player mode");
-		
-		// Right click with "Interact from: Camera"
-		runWurstCommand("setmode Freecam interact_from camera");
-		input.pressMouse(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
-		context.waitTick();
-		assertLeverState(0, -56, 3, true, "far lever, camera mode");
-		assertLeverState(0, -56, 1, true, "near lever, camera mode");
+		assertLeverState(0, -56, 3, true, "far lever, player mode");
 		
 		// Replace levers with chickens
 		runCommand("fill 0 -56 1 0 -56 3 air strict");
@@ -184,27 +191,27 @@ public final class FreecamHackTest extends SingleplayerTest
 		clearParticles();
 		context.waitTick();
 		
+		// Left click with "Interact from: Camera"
+		runWurstCommand("setmode Freecam interact_from camera");
+		input.pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+		context.waitTick();
+		assertChickenHealth(nearChicken, false, "near chicken, camera mode");
+		assertChickenHealth(farChicken, true, "far chicken, camera mode");
+		
 		// Left click with "Interact from: Player"
+		farChicken.discard();
+		farChicken = spawnChicken(3.5);
+		context.waitTick();
 		runWurstCommand("setmode Freecam interact_from player");
 		input.pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
 		context.waitTick();
 		assertChickenHealth(nearChicken, true, "near chicken, player mode");
 		assertChickenHealth(farChicken, false, "far chicken, player mode");
 		
-		// Left click with "Interact from: Camera"
-		nearChicken.discard();
-		nearChicken = spawnChicken(1.5);
-		context.waitTick();
-		runWurstCommand("setmode Freecam interact_from camera");
-		input.pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
-		context.waitTick();
-		assertChickenHealth(farChicken, true, "far chicken, camera mode");
-		assertChickenHealth(nearChicken, false, "near chicken, camera mode");
-		
 		// Clean up
 		nearChicken.discard();
 		farChicken.discard();
-		runWurstCommand("setmode Freecam interact_from player");
+		runWurstCommand("setmode Freecam interact_from camera");
 		input.pressKey(GLFW.GLFW_KEY_U);
 		context.waitTicks(2);
 	}
@@ -212,7 +219,7 @@ public final class FreecamHackTest extends SingleplayerTest
 	private Chicken spawnChicken(double z)
 	{
 		return server.computeOnServer(s -> {
-			Chicken c = EntityType.CHICKEN.create(s.overworld(),
+			Chicken c = EntityTypes.CHICKEN.create(s.overworld(),
 				EntitySpawnReason.COMMAND);
 			c.setPos(0.5, -56, z);
 			c.setNoAi(true);
