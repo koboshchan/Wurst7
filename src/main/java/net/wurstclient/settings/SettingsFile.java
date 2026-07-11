@@ -100,6 +100,9 @@ public final class SettingsFile
 		{
 			disableSaving = true;
 			
+			for(Feature feature : featuresWithSettings.values())
+				feature.onSettingsLoading();
+			
 			for(Entry<String, JsonObject> e : wson.getAllJsonObjects()
 				.entrySet())
 			{

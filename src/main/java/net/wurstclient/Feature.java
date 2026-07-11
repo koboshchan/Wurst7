@@ -65,6 +65,11 @@ public abstract class Feature
 		return false;
 	}
 	
+	public void onSettingsLoading()
+	{
+		
+	}
+	
 	public final Map<String, Setting> getSettings()
 	{
 		return Collections.unmodifiableMap(settings);
