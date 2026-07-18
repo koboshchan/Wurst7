@@ -105,6 +105,18 @@ public final class ItemListSetting extends Setting
 				return;
 			}
 			
+			// if it is a JSON primitive (string), add it as a single item
+			if(json.isJsonPrimitive() && json.getAsJsonPrimitive().isString())
+			{
+				String s = json.getAsString();
+				Item item =
+					BuiltInRegistries.ITEM.getValue(Identifier.parse(s));
+				if(item != null)
+					itemNames
+						.add(BuiltInRegistries.ITEM.getKey(item).toString());
+				return;
+			}
+			
 			// otherwise, load the items in the JSON array
 			JsonUtils.getAsArray(json).getAllStrings().parallelStream()
 				.map(s -> BuiltInRegistries.ITEM.getValue(Identifier.parse(s)))
